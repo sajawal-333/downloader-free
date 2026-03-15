@@ -1,8 +1,5 @@
 FROM node:20-slim
 
-ENV NODE_ENV=production
-ENV PORT=3000
-
 WORKDIR /app
 
 RUN apt-get update && \
@@ -12,12 +9,19 @@ RUN apt-get update && \
 
 COPY package*.json ./
 
-RUN npm install --omit=dev
+# Install ALL dependencies (including devDependencies like vite)
+RUN npm install
 
 COPY . .
 
-RUN npm install --ignore-scripts && npm run build
+# Build the frontend
+RUN npm run build
 
+# Prune devDependencies to keep the image small
+RUN npm prune --omit=dev
+
+ENV NODE_ENV=production
+ENV PORT=3000
 EXPOSE 3000
 
 CMD ["node", "server/index.js"]

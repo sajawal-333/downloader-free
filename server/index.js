@@ -98,10 +98,10 @@ app.post('/api/metadata', async (req, res) => {
       '--no-cache-dir',
       '--no-warnings',
       '--flat-playlist',
+      '--impersonate', 'chrome',
       '--format', 'bestvideo+bestaudio/best',
-      '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
       '--add-header', 'Accept-Language:en-US,en;q=0.9',
-      '--extractor-args', 'youtube:player-client=ios'
+      '--extractor-args', 'youtube:player-client=ios,android,web_embedded;skip=hls,dash'
     ];
 
     if (hasCookies) {
@@ -172,13 +172,13 @@ app.post('/api/download', async (req, res) => {
     '--no-playlist',
     '--socket-timeout',
     '30',
-    '--max-filesize',
-    `${maxFileSizeMb}m`,
+    '--no-cache-dir',
     '--no-check-certificates',
     '--no-warnings',
+    '--impersonate', 'chrome',
     '--concurrent-fragments', '8',
-    '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-    '--extractor-args', 'youtube:player-client=ios'
+    '--add-header', 'Accept-Language:en-US,en;q=0.9',
+    '--extractor-args', 'youtube:player-client=ios,android,web_embedded;skip=hls,dash'
   ];
 
   if (hasCookies) {

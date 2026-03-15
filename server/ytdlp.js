@@ -34,7 +34,13 @@ const getBaseArgs = () => {
         '--throttled-rate', '100K',
         '--download-sections', '0:00:00-',
         '--no-download-archive',
-        '--no-playlist'
+        '--no-playlist',
+        // Bot detection bypass
+        '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+        '--referer', 'https://www.youtube.com/',
+        '--geo-bypass',
+        '--geo-bypass-country', 'US',
+        '--extractor-args', 'youtube:player-skip=webpage,configs'
     ];
 
     if (hasCookies) {
@@ -57,7 +63,25 @@ export const getVideoInfo = async (url) => {
     } catch (err) {
         const msg = err?.message || '';
         if (msg.includes('Sign in to confirm you’re not a bot')) {
-            throw new Error('BOT_DETECTION_TRIGGERED');
+            // Try alternative approach with different user agent
+            const altArgs = [
+                url,
+                '--flat-playlist',
+                '--no-check-certificates',
+                '--no-cache-dir',
+                '--no-warnings',
+                '--user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                '--referer', 'https://www.youtube.com/',
+                '--geo-bypass',
+                '--geo-bypass-country', 'US',
+                '--extractor-args', 'youtube:player-skip=webpage,configs'
+            ];
+            try {
+                console.log(`[yt-dlp] Retrying metadata fetch with alternative args for: ${url}`);
+                return await ytDlp.getVideoInfo(altArgs);
+            } catch (altErr) {
+                throw new Error('BOT_DETECTION_TRIGGERED');
+            }
         }
         throw err;
     }

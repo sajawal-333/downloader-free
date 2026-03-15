@@ -14,6 +14,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+
+# Install ALL dependencies (including devDependencies like vite)
 RUN npm install
 
 # Copy app source
@@ -22,11 +24,6 @@ COPY . .
 # Optional: Copy cookies.txt if it exists in the build context
 COPY server/cookies.tx[t] /app/server/cookies.txt
 
-# Install ALL dependencies (including devDependencies like vite)
-RUN npm install
-
-COPY . .
-
 # Build the frontend
 RUN npm run build
 
@@ -34,8 +31,8 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 ENV NODE_ENV=production
-ENV PORT=3000
-EXPOSE 3000
+ENV PORT=4000
+EXPOSE 4000
 
 CMD ["node", "server/index.js"]
 

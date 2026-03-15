@@ -3,8 +3,10 @@ FROM node:20-slim
 WORKDIR /app
 
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends python3 python3-pip ffmpeg ca-certificates && \
+  apt-get install -y --no-install-recommends python3 python3-pip ffmpeg ca-certificates curl unzip && \
   pip3 install --no-cache-dir yt-dlp --break-system-packages && \
+  curl -fsSL https://deno.land/x/install/install.sh | sh && \
+  ln -s /root/.deno/bin/deno /usr/bin/deno && \
   ln -s /usr/bin/python3 /usr/bin/python && \
   rm -rf /var/lib/apt/lists/*
 

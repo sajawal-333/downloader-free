@@ -14,6 +14,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Trust Railway proxy for express-rate-limit
+app.set('trust proxy', 1);
+
 const BLOCKED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
 
 const isValidUrl = (url) => {
@@ -84,7 +87,15 @@ app.post('/api/metadata', async (req, res) => {
   }
   try {
     console.log(`Fetching metadata for: ${url}`);
-    const info = await ytDlp.getVideoInfo(url);
+    // Use better args to avoid bot detection and warnings
+    const info = await ytDlp.getVideoInfo([
+      url,
+      '--no-check-certificates',
+      '--no-cache-dir',
+      '--format', 'bestvideo+bestaudio/best',
+      '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+      '--add-header', 'Accept-Language:en-US,en;q=0.9'
+    ]);
     res.json({
       title: info.title,
       author: info.uploader,
@@ -93,13 +104,18 @@ app.post('/api/metadata', async (req, res) => {
       platform: info.extractor_key
     });
   } catch (err) {
-    console.error('Metadata Error:', err?.message || err);
-    if (err?.stderr) console.error('yt-dlp stderr:', err.stderr);
+    const errorMsg = err?.message || '';
+    console.error('Metadata Error:', errorMsg);
     
+    if (errorMsg.includes('Sign in to confirm you’re not a bot')) {
+      return res.status(403).json({
+        message: 'YouTube is restricting access from this server. Please try again later or use a different media link.'
+      });
+    }
+
     res.status(500).json({
-      message:
-        'Could not read this media. It may be private, region-locked, or temporarily unavailable.',
-      details: process.env.NODE_ENV === 'development' ? err?.message : undefined
+      message: 'Could not read this media. It may be private, region-locked, or unsupported.',
+      details: process.env.NODE_ENV === 'development' ? errorMsg : undefined
     });
   }
 });

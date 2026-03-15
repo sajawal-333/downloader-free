@@ -25,7 +25,15 @@ const getBaseArgs = () => {
         '--sleep-interval', '2',
         '--max-sleep-interval', '5',
         '--retries', '10',
-        '--fragment-retries', '10'
+        '--fragment-retries', '10',
+        // Performance optimizations
+        '--concurrent-fragments', '8',
+        '--socket-timeout', '30',
+        '--fragment-retries', '10',
+        '--throttled-rate', '100K',
+        '--download-sections', '0:00:00-',
+        '--no-download-archive',
+        '--no-playlist'
     ];
 
     if (hasCookies) {
@@ -64,7 +72,7 @@ export const getDownloadStream = (url, formatSelector, jobId) => {
         '--no-playlist',
         ...getBaseArgs()
     ];
-    
+
     return ytDlp.exec(args);
 };
 

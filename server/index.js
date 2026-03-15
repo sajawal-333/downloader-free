@@ -85,7 +85,7 @@ app.post('/api/metadata', async (req, res) => {
     });
   } catch (err) {
     console.error('Metadata Error:', err?.message || err);
-    
+
     if (err.message === 'BOT_DETECTION_TRIGGERED') {
       return res.status(403).json({
         message: 'YouTube is blocking this server as a bot. Please provide a cookies.txt file or try again later.'
@@ -214,7 +214,7 @@ app.get('/api/file/:id', (req, res) => {
 
   const stream = fs.createReadStream(filePath);
   stream.on('close', () => {
-    fs.unlink(filePath, () => {});
+    fs.unlink(filePath, () => { });
     downloadJobs.delete(job.id);
   });
   stream.on('error', () => {
@@ -223,7 +223,7 @@ app.get('/api/file/:id', (req, res) => {
     } else {
       res.end();
     }
-    fs.unlink(filePath, () => {});
+    fs.unlink(filePath, () => { });
     downloadJobs.delete(job.id);
   });
   stream.pipe(res);

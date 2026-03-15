@@ -263,18 +263,16 @@ const FormatSelector = ({ value, onChange, disabled }) => {
               disabled={disabled}
               role="radio"
               aria-checked={active}
-              className={`group flex items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/70 ${
-                active
+              className={`group flex items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/70 ${active
                   ? 'border-neon-cyan/80 bg-neon-cyan/10 shadow-glow'
                   : 'border-white/10 bg-black/30 hover:border-neon-cyan/60 hover:bg-neon-cyan/5'
-              } disabled:opacity-60 disabled:cursor-not-allowed`}
+                } disabled:opacity-60 disabled:cursor-not-allowed`}
             >
               <span
-                className={`mt-1 h-3 w-3 rounded-full border flex items-center justify-center ${
-                  active
+                className={`mt-1 h-3 w-3 rounded-full border flex items-center justify-center ${active
                     ? 'border-neon-cyan bg-neon-cyan/10'
                     : 'border-slate-500 bg-black/40 group-hover:border-neon-cyan/80'
-                }`}
+                  }`}
               >
                 {active && <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan" />}
               </span>
@@ -307,9 +305,8 @@ const DownloadButton = ({ disabled, state, progress, onClick }) => {
         type="button"
         onClick={onClick}
         disabled={disabled}
-        className={`relative w-full overflow-hidden rounded-2xl bg-neon-cyan text-black py-3.5 text-[12px] uppercase tracking-[0.28em] font-mono shadow-glow transition transform hover:-translate-y-0.5 hover:shadow-neon-cyan/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/80 disabled:opacity-50 disabled:shadow-none disabled:translate-y-0 ${
-          !disabled && state === STATES.READY ? 'animate-pulse-glow' : ''
-        }`}
+        className={`relative w-full overflow-hidden rounded-2xl bg-neon-cyan text-black py-3.5 text-[12px] uppercase tracking-[0.28em] font-mono shadow-glow transition transform hover:-translate-y-0.5 hover:shadow-neon-cyan/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/80 disabled:opacity-50 disabled:shadow-none disabled:translate-y-0 ${!disabled && state === STATES.READY ? 'animate-pulse-glow' : ''
+          }`}
       >
         <div
           className="absolute inset-0 bg-gradient-to-r from-black/10 via-black/25 to-black/5"
@@ -472,7 +469,7 @@ const App = () => {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          'We could not fetch this media. It may be private or unsupported.'
+        'We could not fetch this media. It may be private or unsupported.'
       );
       setState(STATES.ERROR);
     }
@@ -543,7 +540,7 @@ const App = () => {
           } else if (res.data?.status === 'error') {
             setError(
               res.data?.error ||
-                'Download failed. Please try again or use a different format.'
+              'Download failed. Please try again or use a different format.'
             );
             setState(STATES.ERROR);
             setProgress(null);

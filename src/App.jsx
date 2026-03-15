@@ -134,9 +134,17 @@ const DownloadBox = ({
           type="button"
           onClick={onSubmit}
           disabled={!url.trim() || disabled}
-          className="inline-flex items-center gap-2 rounded-xl bg-neon-cyan text-black px-4 py-2.5 text-[11px] uppercase tracking-[0.2em] font-mono shadow-glow hover:shadow-neon-cyan/40 hover:-translate-y-0.5 transition disabled:opacity-40 disabled:shadow-none disabled:translate-y-0"
+          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-[11px] uppercase tracking-[0.2em] font-mono hover:bg-white/10 transition disabled:opacity-40"
         >
           <span>{state === STATES.LOADING ? 'Fetching…' : 'Analyze'}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onSubmit({ quick: true })}
+          disabled={!url.trim() || disabled}
+          className="inline-flex items-center gap-2 rounded-xl bg-neon-cyan text-black px-4 py-2.5 text-[11px] uppercase tracking-[0.2em] font-mono shadow-glow hover:shadow-neon-cyan/40 hover:-translate-y-0.5 transition disabled:opacity-40 disabled:shadow-none disabled:translate-y-0"
+        >
+          <span>⚡ Quick</span>
         </button>
       </div>
     </div>
@@ -447,12 +455,17 @@ const App = () => {
     }
   }, []);
 
-  const fetchMetadata = async () => {
+  const fetchMetadata = async (options = {}) => {
     if (!url.trim()) return;
     setError('');
     setMeta(null);
     setState(STATES.LOADING);
     try {
+      if (options.quick) {
+        // Skip metadata wait, go straight to download
+        handleDownload();
+        return;
+      }
       const { data } = await axios.post('/api/metadata', { url: url.trim() });
       setMeta(data);
       setState(STATES.READY);

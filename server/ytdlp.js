@@ -10,6 +10,7 @@ const YTDlpWrap = YTDlpWrapModule?.default || YTDlpWrapModule;
 const ytDlp = new YTDlpWrap();
 
 const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
+const TMP_DIR = path.join(__dirname, 'tmp');
 
 const getBaseArgs = () => {
     const hasCookies = fs.existsSync(COOKIES_PATH);

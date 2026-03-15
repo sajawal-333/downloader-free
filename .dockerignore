@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+*.local
+
+dist
+.git
+.gitignore
+.cache
+.vscode
+.DS_Store
+
+coverage
+*.tsbuildinfo
+

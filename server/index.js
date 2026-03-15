@@ -85,17 +85,28 @@ app.post('/api/metadata', async (req, res) => {
   if (!url || !isValidUrl(url) || !isSafeUrl(url)) {
     return res.status(400).json({ message: 'Please provide a valid, public media URL.' });
   }
+
+  const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
+  const hasCookies = fs.existsSync(COOKIES_PATH);
+
   try {
-    console.log(`Fetching metadata for: ${url}`);
-    // Use better args to avoid bot detection and warnings
-    const info = await ytDlp.getVideoInfo([
+    console.log(`Fetching metadata for: ${url} (Cookies: ${hasCookies})`);
+    
+    const args = [
       url,
       '--no-check-certificates',
       '--no-cache-dir',
       '--format', 'bestvideo+bestaudio/best',
       '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-      '--add-header', 'Accept-Language:en-US,en;q=0.9'
-    ]);
+      '--add-header', 'Accept-Language:en-US,en;q=0.9',
+      '--extractor-args', 'youtube:player-client=ios'
+    ];
+
+    if (hasCookies) {
+      args.push('--cookies', COOKIES_PATH);
+    }
+
+    const info = await ytDlp.getVideoInfo(args);
     res.json({
       title: info.title,
       author: info.uploader,
@@ -109,7 +120,7 @@ app.post('/api/metadata', async (req, res) => {
     
     if (errorMsg.includes('Sign in to confirm you’re not a bot')) {
       return res.status(403).json({
-        message: 'YouTube is restricting access from this server. Please try again later or use a different media link.'
+        message: 'YouTube is blocking this server as a bot. Please provide a cookies.txt file to the project or try a different media link.'
       });
     }
 
@@ -144,6 +155,9 @@ app.post('/api/download', async (req, res) => {
   const maxFileSizeMb = Number(process.env.MAX_FILESIZE_MB || 250);
   const jobId = uuidv4();
 
+  const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
+  const hasCookies = fs.existsSync(COOKIES_PATH);
+
   const outTemplate = path.join(TMP_DIR, `${jobId}.%(ext)s`);
   const args = [
     url,
@@ -157,8 +171,15 @@ app.post('/api/download', async (req, res) => {
     '--socket-timeout',
     '30',
     '--max-filesize',
-    `${maxFileSizeMb}m`
+    `${maxFileSizeMb}m`,
+    '--no-check-certificates',
+    '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+    '--extractor-args', 'youtube:player-client=ios'
   ];
+
+  if (hasCookies) {
+    args.push('--cookies', COOKIES_PATH);
+  }
 
   const job = {
     id: jobId,

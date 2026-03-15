@@ -5,6 +5,7 @@ WORKDIR /app
 RUN apt-get update && \
   apt-get install -y --no-install-recommends python3 python3-pip ffmpeg ca-certificates && \
   pip3 install --no-cache-dir yt-dlp --break-system-packages && \
+  ln -s /usr/bin/python3 /usr/bin/python && \
   rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./

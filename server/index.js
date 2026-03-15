@@ -62,10 +62,19 @@ if (!fs.existsSync(TMP_DIR)) {
 const YTDlpWrap = YTDlpWrapModule?.default || YTDlpWrapModule;
 const ytDlp = new YTDlpWrap();
 
+// Diagnostic check for yt-dlp on startup
+try {
+  ytDlp.getVersion()
+    .then(version => console.log(`yt-dlp version: ${version}`))
+    .catch(err => console.error('yt-dlp diagnostic failed on startup:', err.message || err));
+} catch (e) {
+  console.error('yt-dlp init error:', e.message);
+}
+
 const downloadJobs = new Map();
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', ytDlp: 'checking' });
 });
 
 app.post('/api/metadata', async (req, res) => {
@@ -74,6 +83,7 @@ app.post('/api/metadata', async (req, res) => {
     return res.status(400).json({ message: 'Please provide a valid, public media URL.' });
   }
   try {
+    console.log(`Fetching metadata for: ${url}`);
     const info = await ytDlp.getVideoInfo(url);
     res.json({
       title: info.title,
@@ -83,10 +93,13 @@ app.post('/api/metadata', async (req, res) => {
       platform: info.extractor_key
     });
   } catch (err) {
-    console.error('metadata error', err?.message || err);
+    console.error('Metadata Error:', err?.message || err);
+    if (err?.stderr) console.error('yt-dlp stderr:', err.stderr);
+    
     res.status(500).json({
       message:
-        'Could not read this media. It may be private, region-locked, or temporarily unavailable.'
+        'Could not read this media. It may be private, region-locked, or temporarily unavailable.',
+      details: process.env.NODE_ENV === 'development' ? err?.message : undefined
     });
   }
 });

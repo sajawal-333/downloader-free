@@ -6,7 +6,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { v4 as uuidv4 } from 'uuid';
-import YTDlpWrapModule from 'yt-dlp-wrap';
+import { getVideoInfo, getDownloadStream } from './ytdlp.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -62,22 +62,10 @@ if (!fs.existsSync(TMP_DIR)) {
   fs.mkdirSync(TMP_DIR, { recursive: true });
 }
 
-const YTDlpWrap = YTDlpWrapModule?.default || YTDlpWrapModule;
-const ytDlp = new YTDlpWrap();
-
-// Diagnostic check for yt-dlp on startup
-try {
-  ytDlp.getVersion()
-    .then(version => console.log(`yt-dlp version: ${version}`))
-    .catch(err => console.error('yt-dlp diagnostic failed on startup:', err.message || err));
-} catch (e) {
-  console.error('yt-dlp init error:', e.message);
-}
-
 const downloadJobs = new Map();
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', ytDlp: 'checking' });
+  res.json({ status: 'ok' });
 });
 
 app.post('/api/metadata', async (req, res) => {
@@ -86,29 +74,8 @@ app.post('/api/metadata', async (req, res) => {
     return res.status(400).json({ message: 'Please provide a valid, public media URL.' });
   }
 
-  const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
-  const hasCookies = fs.existsSync(COOKIES_PATH);
-
   try {
-    console.log(`Fetching metadata for: ${url} (Cookies: ${hasCookies})`);
-    
-    const args = [
-      url,
-      '--no-check-certificates',
-      '--no-cache-dir',
-      '--no-warnings',
-      '--flat-playlist',
-      '--impersonate', 'chrome',
-      '--format', 'bestvideo+bestaudio/best',
-      '--add-header', 'Accept-Language:en-US,en;q=0.9',
-      '--extractor-args', 'youtube:player-client=ios,android,web_embedded;skip=hls,dash'
-    ];
-
-    if (hasCookies) {
-      args.push('--cookies', COOKIES_PATH);
-    }
-
-    const info = await ytDlp.getVideoInfo(args);
+    const info = await getVideoInfo(url);
     res.json({
       title: info.title,
       author: info.uploader,
@@ -117,18 +84,17 @@ app.post('/api/metadata', async (req, res) => {
       platform: info.extractor_key
     });
   } catch (err) {
-    const errorMsg = err?.message || '';
-    console.error('Metadata Error:', errorMsg);
+    console.error('Metadata Error:', err?.message || err);
     
-    if (errorMsg.includes('Sign in to confirm you’re not a bot')) {
+    if (err.message === 'BOT_DETECTION_TRIGGERED') {
       return res.status(403).json({
-        message: 'YouTube is blocking this server as a bot. Please provide a cookies.txt file to the project or try a different media link.'
+        message: 'YouTube is blocking this server as a bot. Please provide a cookies.txt file or try again later.'
       });
     }
 
     res.status(500).json({
       message: 'Could not read this media. It may be private, region-locked, or unsupported.',
-      details: process.env.NODE_ENV === 'development' ? errorMsg : undefined
+      details: process.env.NODE_ENV === 'development' ? err?.message : undefined
     });
   }
 });
@@ -157,34 +123,6 @@ app.post('/api/download', async (req, res) => {
   const maxFileSizeMb = Number(process.env.MAX_FILESIZE_MB || 250);
   const jobId = uuidv4();
 
-  const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
-  const hasCookies = fs.existsSync(COOKIES_PATH);
-
-  const outTemplate = path.join(TMP_DIR, `${jobId}.%(ext)s`);
-  const args = [
-    url,
-    '-f',
-    buildFormatSelector(format),
-    '--merge-output-format',
-    format === 'mp3' ? 'mp3' : 'mp4',
-    '-o',
-    outTemplate,
-    '--no-playlist',
-    '--socket-timeout',
-    '30',
-    '--no-cache-dir',
-    '--no-check-certificates',
-    '--no-warnings',
-    '--impersonate', 'chrome',
-    '--concurrent-fragments', '8',
-    '--add-header', 'Accept-Language:en-US,en;q=0.9',
-    '--extractor-args', 'youtube:player-client=ios,android,web_embedded;skip=hls,dash'
-  ];
-
-  if (hasCookies) {
-    args.push('--cookies', COOKIES_PATH);
-  }
-
   const job = {
     id: jobId,
     status: 'running',
@@ -194,7 +132,8 @@ app.post('/api/download', async (req, res) => {
   };
   downloadJobs.set(jobId, job);
 
-  const child = ytDlp.exec(args);
+  // Use the new simplified helper
+  const child = getDownloadStream(url, buildFormatSelector(format), jobId);
 
   child.on('progress', (progress) => {
     const current = downloadJobs.get(jobId);

@@ -10,7 +10,17 @@ RUN apt-get update && \
   ln -s /usr/bin/python3 /usr/bin/python && \
   rm -rf /var/lib/apt/lists/*
 
+WORKDIR /app
+
+# Copy package files
 COPY package*.json ./
+RUN npm install
+
+# Copy app source
+COPY . .
+
+# Optional: Copy cookies.txt if it exists in the build context
+COPY server/cookies.tx[t] /app/server/cookies.txt
 
 # Install ALL dependencies (including devDependencies like vite)
 RUN npm install

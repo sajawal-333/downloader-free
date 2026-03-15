@@ -40,12 +40,17 @@ const getBaseArgs = () => {
         '--referer', 'https://www.youtube.com/',
         '--geo-bypass',
         '--geo-bypass-country', 'US',
-        '--extractor-args', 'youtube:player-skip=webpage,configs'
+        '--extractor-args', 'youtube:player-skip=webpage,configs',
+        // Additional bypass measures
+        '--extractor-args', 'youtube:player-skip=webpage,configs,js'
     ];
 
     if (hasCookies) {
         console.log('[yt-dlp] Using cookies.txt found at:', COOKIES_PATH);
         args.push('--cookies', COOKIES_PATH);
+    } else {
+        // If no cookies, try to use browser cookies if available
+        args.push('--cookies-from-browser', 'chrome');
     }
     return args;
 };

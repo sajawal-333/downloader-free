@@ -70,6 +70,7 @@ export const getDownloadStream = (url, formatSelector, jobId) => {
         '--concurrent-fragments', '8',
         '--socket-timeout', '30',
         '--no-playlist',
+        '--output', `${TMP_DIR}/${jobId}.%(ext)s`,
         ...getBaseArgs()
     ];
 

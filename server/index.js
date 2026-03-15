@@ -163,19 +163,22 @@ app.post('/api/download', async (req, res) => {
       downloadJobs.set(jobId, current);
       return;
     }
-    const files = fs
-      .readdirSync(TMP_DIR)
-      .filter((f) => f.startsWith(jobId));
-    if (!files.length) {
-      current.status = 'error';
-      current.error = 'Download finished but file was not found.';
+    // Wait a moment for file system to finalize
+    setTimeout(() => {
+      const files = fs
+        .readdirSync(TMP_DIR)
+        .filter((f) => f.startsWith(jobId));
+      if (!files.length) {
+        current.status = 'error';
+        current.error = 'Download finished but file was not found.';
+        downloadJobs.set(jobId, current);
+        return;
+      }
+      current.status = 'done';
+      current.progress = 100;
+      current.filename = files[0];
       downloadJobs.set(jobId, current);
-      return;
-    }
-    current.status = 'done';
-    current.progress = 100;
-    current.filename = files[0];
-    downloadJobs.set(jobId, current);
+    }, 1000);
   });
 
   res.json({ jobId });
